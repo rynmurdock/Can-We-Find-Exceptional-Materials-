@@ -92,7 +92,7 @@ def plot_prob(threshold, y_act, y_prob, threshold_x=300):
     plt.plot([-10, 600], [threshold, threshold], 'k--', label='threshold', linewidth=3)
 
     plt.ylabel('Probability of being extraordinary')
-    plt.xlabel('DFT computed bulk modulus')
+    plt.xlabel('Bulk Modulus')
     plt.xlim(-10, max(y_act)+50)
     plt.ylim(-.02, 1)
 
@@ -124,8 +124,8 @@ def plot_regression(threshold, y_act, y_pred, threshold_x=300):
     plt.plot(y_act, y_pred, 'o', mfc='none', alpha=0.6, mec='#3F6077', mew=1.4)
     plt.plot([-10, 600], [threshold, threshold], 'k--', label='threshold', linewidth=3)
 
-    plt.ylabel('Predicted bulk modulus')
-    plt.xlabel('DFT computed bulk modulus')
+    plt.ylabel('Predicted Bulk Modulus')
+    plt.xlabel('Bulk Modulus')
     plt.xlim(-10, max(y_act)+50)
     plt.ylim(-10, max(y_act)+50)
 

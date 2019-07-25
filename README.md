@@ -33,7 +33,7 @@ DFT computed bulk modulus (K, Voigt-Ruess-Hill) data were gathered from the mate
 
 ### ```process_data.py```
 
-The combined data was read in as a pandas DataFrame containing 12029 unique formula. After vectorization, the data was reduced down to 11993 compounds with 176 features (see ```composition.py```) after removing compounds with the elements Pa and Pu. We then converted the data into a training set and a testing set. The test set (size = 5100) is composed from the data with the highest 100 values (K = 297-435 GPa) and 5000 randomly selected compounds from the bottom 11895 compounds. The training set (size = 6893) contains the remaining data (max K = 296 GPa).
+The combined data was read in as a pandas DataFrame containing 12029 unique formula. After vectorization, the data was reduced down to 11993 compounds with 176 features (see ```composition.py```) after removing compounds with the elements Pa and Pu. We then converted the data into a training set and a testing set. The test set (size = 600) is composed from the data with the highest 100 values (K = 297-435 GPa) and 600 randomly selected compounds from the bottom 11895 compounds. The training set (size = 6893) contains the remaining data (max K = 296 GPa).
 
 To allow for a classification task, we needed to label the data. For the test set, we converted these values into labels representing "extraordinary" (K > 300 GPa) and "ordinary" (K < 300 GPa). The training set was labeled with "extraordinary" values above K = 245 GPa leaving the rest as "ordinary".
 

@@ -90,7 +90,7 @@ for mat_prop in mat_props:
     ax.text(100, 500, 'Ordinary\nCompounds', size=text_size)
     ax.text(305, 90, 'Extraordinary\nCompounds', size=text_size)
     ax.tick_params(direction='in', length=5, bottom=True, top=True, left=True, right=True, labelsize=text_size)
-    ax.set_xlabel('DFT Bulk Modulus', size=text_size)
+    ax.set_xlabel('Bulk Modulus', size=text_size)
     ax.set_ylabel('Frequency', size=text_size)
     plt.savefig('figures/distplot', dpi=300, bbox_inches='tight')
 
