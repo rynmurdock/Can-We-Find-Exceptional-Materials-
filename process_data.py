@@ -14,7 +14,7 @@ from sklearn.preprocessing import StandardScaler, Normalizer
 import composition
 
 
-mat_props = ['ael_bulk_modulus_vrh'] #'agl_thermal_conductivity_300K','ael_shear_modulus_vrh',
+mat_props = ['agl_thermal_conductivity_300K'] #'ael_b','agl_thermal_conductivity_300K',
 
 for mat_prop in mat_props:
 
@@ -93,14 +93,14 @@ for mat_prop in mat_props:
 
     # In the training set label compounds with values above 245 as "extraordinary"
     for value in y_train:
-        if value > 245:
+        if value > 18: # 130 for shear mod. 18 for conductivity
             y_train_label.append(1)  # (1 - extraordinary)
         else:
             y_train_label.append(0)  # (0 - ordinary)
 
     # In the test set label compounds with values above 300 as "extraordinary" (
     for value in y_test:
-        if value > 300:
+        if value > 25: #175 for shear mod. 25 for conductivity
             y_test_label.append(1)
         else:
             y_test_label.append(0)
