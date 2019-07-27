@@ -13,6 +13,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import seaborn as sns
+import os
 
 # import machine learning libraries
 from sklearn.svm import SVR
@@ -20,6 +21,7 @@ from sklearn.model_selection import GridSearchCV, KFold
 from sklearn.linear_model import Ridge, LogisticRegression
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.svm import SVR, SVC
+from sklearn.metrics import f1_score
 from matplotlib.colors import Normalize
 
 # import model selection tools
@@ -41,31 +43,43 @@ class MidpointNormalize(Normalize):
     def __call__(self, value, clip=None):
         x, y = [self.vmin, self.midpoint, self.vmax], [0, 0.5, 1]
         return np.ma.masked_array(np.interp(value, x, y))
-    
-pcd = False
 
+def optimize_threshold(y_train_labeled, y_train_pred):
+    y_train_ = y_train_labeled.copy()
+    y_train_pred_ = pd.Series(y_train_pred).copy()
+    f1score_max = 0
+    for threshold in np.arange(0.1, 1, 0.1):
+        threshold = threshold * max(y_train_pred)
+        y_train_pred_[y_train_pred < threshold] = 0
+        y_train_pred_[y_train_pred >= threshold] = 1
+        f1score = f1_score(y_train_, y_train_pred_)
+        if f1score > f1score_max:
+            f1score_max = f1score
+            opt_thresh = threshold
+    return opt_thresh
+
+pcd = False
 
 # ### Import CSV files
 
 # In[2]:
 
-mat_props = ['ael_shear_modulus_vrh']
-train_threshold = 170
-test_threshold = 175
+mat_props = ['ael_bulk_modulus_vrh', 'ael_shear_modulus_vrh']  # 'ael_bulk_modulus_vrh', 'agl_log10_thermal_conductivity_300K', 'ael_shear_modulus_vrh', 'Egap', 'ael_log10_debye_temperature', 'agl_log10_thermal_expansion_300K'
 
 for mat_prop in mat_props:
-    X_train = pd.read_csv('data/'+mat_prop+'X_train.csv')
-    X_train_scaled = pd.read_csv('data/'+mat_prop+'X_train_scaled.csv')
-    y_train = pd.read_csv('data/'+mat_prop+'y_train.csv', header=None, squeeze=True)
-    y_train_labeled = pd.read_csv('data/'+mat_prop+'y_train_labeled.csv', header=None, squeeze=True)
+    os.makedirs('figures/'+mat_prop, exist_ok=True)
+    X_train = pd.read_csv('data/'+mat_prop+'_X_train.csv')
+    X_train_scaled = pd.read_csv('data/'+mat_prop+'_X_train_scaled.csv')
+    y_train = pd.read_csv('data/'+mat_prop+'_y_train.csv', header=None, squeeze=True)
+    y_train_labeled = pd.read_csv('data/'+mat_prop+'_y_train_labeled.csv', header=None, squeeze=True)
 
-    X_test = pd.read_csv('data/'+mat_prop+'X_test.csv')
-    X_test_scaled = pd.read_csv('data/'+mat_prop+'X_test_scaled.csv')
-    y_test = pd.read_csv('data/'+mat_prop+'y_test.csv', header=None, squeeze=True)
-    y_test_labeled = pd.read_csv('data/'+mat_prop+'y_test_labeled.csv', header=None, squeeze=True)
+    X_test = pd.read_csv('data/'+mat_prop+'_X_test.csv')
+    X_test_scaled = pd.read_csv('data/'+mat_prop+'_X_test_scaled.csv')
+    y_test = pd.read_csv('data/'+mat_prop+'_y_test.csv', header=None, squeeze=True)
+    y_test_labeled = pd.read_csv('data/'+mat_prop+'_y_test_labeled.csv', header=None, squeeze=True)
 
-    formula_train = pd.read_csv('data/'+mat_prop+'formula_train.csv', header=None, squeeze=True)
-    formula_test = pd.read_csv('data/'+mat_prop+'formula_test.csv', header=None, squeeze=True)
+    formula_train = pd.read_csv('data/'+mat_prop+'_formula_train.csv', header=None, squeeze=True)
+    formula_test = pd.read_csv('data/'+mat_prop+'_formula_test.csv', header=None, squeeze=True)
 
     if pcd is True:
         X_pcd = pd.read_csv('pcd_data/X_pcd.csv')
@@ -74,14 +88,13 @@ for mat_prop in mat_props:
 
     plt.rcParams.update({'font.size': 12})
 
+    test_threshold = y_test.iloc[-y_test_labeled.sum().astype(int)]
+    train_threshold = y_train.iloc[-y_train_labeled.sum().astype(int)]
 
     # In[3]:
 
-
-
     y = pd.concat([y_train, y_test])
     plt.figure(1, figsize=(7, 7))
-
     ax = sns.distplot(y, bins=50, kde=False)
 
     rect1 = patches.Rectangle((test_threshold, 0), ax.get_xlim()[1]-test_threshold, ax.get_ylim()[1], linewidth=1, edgecolor='k', facecolor='g', alpha=0.2)
@@ -89,18 +102,17 @@ for mat_prop in mat_props:
 
     text_size = 18
 
-    ax.text(0, ax.get_ylim()[1]-120, 'Ordinary\nCompounds', size=text_size)
-    ax.text(test_threshold+(ax.get_xlim()[1]-test_threshold)//2-100, 90, 'Extraordinary\nCompounds', size=text_size)
+    ax.text(.1, .5, 'Ordinary\nCompounds', size=text_size, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes)
+    ax.text(.98, .15, 'Extraordinary\nCompounds', size=text_size, horizontalalignment='right', verticalalignment='center', transform=ax.transAxes)
+#    ax.text(test_threshold+(ax.get_xlim()[1]-test_threshold)//2-100, 90, 'Extraordinary\nCompounds', size=text_size)
     ax.tick_params(direction='in', length=5, bottom=True, top=True, left=True, right=True, labelsize=text_size)
-    ax.set_xlabel('Shear Modulus', size=text_size)
-    ax.set_ylabel('Frequency', size=text_size)
-    plt.savefig('figures/distplot', dpi=300, bbox_inches='tight')
-
+    ax.set_xlabel(mat_prop.title(), size=text_size)
+    ax.set_ylabel('number of occurances'.title(), size=text_size)
+    plt.savefig('figures/' + mat_prop +'/distplot', dpi=300, bbox_inches='tight')
+    plt.show()
 
     # ## Learn with a Ridge Regression (linear model)
-
     # In[4]:
-
 
     # define ridge regression object
     rr = Ridge()
@@ -119,9 +131,9 @@ for mat_prop in mat_props:
     # plot grid search to ensure good values)
     plot = utils.plot_1d_grid_search(grid, midpoint=0.75)
     print('best parameters:', grid.best_params_)
-    plt.savefig('figures/rr_1d_search', dpi=300, bbox_inches='tight')
+    plt.savefig('figures/' + mat_prop +'/rr_1d_search', dpi=300, bbox_inches='tight')
+    plt.show()
     best_params_rr = grid.best_params_
-
 
     # From the figure above, we can see that adding regularization to the ridge regression leads to worse performance. Regularization has the effect of reducing model complexity by limiting the magnitude of the coefficients we use in the regression. In other words, higher regularization restricts our model to a lower learning capacity. In our case, limiting the extent of regularization improves the model. This indicates that the model improves from capturing more complex relationships that exist in the data.
     # 
@@ -132,7 +144,7 @@ for mat_prop in mat_props:
     # In[5]:
 
 
-    best_params_rr = {'alpha': 0.0021544346900318843}
+#    best_params_rr = {'alpha': 0.0021544346900318843}
     rr = Ridge(**best_params_rr)
     rr.fit(X_train_scaled, y_train)
     y_test_predicted_rr = rr.predict(X_test_scaled)
@@ -151,7 +163,8 @@ for mat_prop in mat_props:
     plt.ylabel('predicted')
     plt.legend(loc=4)
     plt.tick_params(direction='in', length=5, bottom=True, top=True, left=True, right=True)
-    plt.savefig('figures/rr_act_vs_pred', dpi=300, bbox_inches='tight')
+    plt.savefig('figures/' + mat_prop +'/rr_act_vs_pred', dpi=300, bbox_inches='tight')
+    plt.show()
 
 
     # You can see that the train and test predictions are not significantly different. This is generally due to the model not having sufficient capacity to learn the desired property with the given inputs. This indicates that we may find better performance using more complex non-linear models. A support vector regression allows us to learn from data in a non-linear space. This often leads to better performance and is a great canadadite for our next model. Other approaches might include a random forest algorithm or neural networks. However, random forest models performed poorly on preliminary testing and we deemed a neural network as overly complex for our purposes.
@@ -162,7 +175,7 @@ for mat_prop in mat_props:
 
 
     # to speed up the grid search, optimize on a subsample of data
-    X_train_scaled_sampled = X_train_scaled.sample(1500, random_state=1)
+    X_train_scaled_sampled = X_train_scaled.sample(500, random_state=1)
     y_train_sampled = y_train.loc[X_train_scaled_sampled.index.values]
 
     # define support vector regression object (default to rbf kernel)
@@ -181,15 +194,14 @@ for mat_prop in mat_props:
 
     # plot grid search to ensure good values
     utils.plot_2d_grid_search(grid, midpoint=0.7)
-    plt.savefig('figures/svr_2d_search', dpi=300, bbox_inches='tight')
+    plt.savefig('figures/' + mat_prop +'/svr_2d_search', dpi=300, bbox_inches='tight')
+    plt.show()
     print('best parameters:', grid.best_params_)
     best_params_svr = grid.best_params_
 
-
     # In[7]:
 
-
-    best_params_svr = {'C': 1389.4954943731375, 'gamma': 0.19306977288832497}
+#    best_params_svr = {'C': 1389.4954943731375, 'gamma': 0.19306977288832497}
     svr = SVR(**best_params_svr)
     svr.fit(X_train_scaled, y_train)
 
@@ -212,7 +224,8 @@ for mat_prop in mat_props:
     plt.ylabel('predicted')
     plt.legend(loc=4)
     plt.tick_params(direction='in', length=5, bottom=True, top=True, left=True, right=True)
-    plt.savefig('figures/svr_act_vs_pred', dpi=300, bbox_inches='tight')
+    plt.savefig('figures/' + mat_prop +'/svr_act_vs_pred', dpi=300, bbox_inches='tight')
+    plt.show()
 
 
     # The performance of the test data, shown above in blue, is not optimal. In the case of both a ridge and support vector regression, we fail to capture the behavior without introducing significant spread in the predicted versus actual values. This is especially true with higher value compounds. This is unfortunate, as these are the target compounds for succesful extrapolation. Rather than looking for compounds with values predicted beyond the training set, we can succesfully extrapolate by introducing heuritics to aid in our search. For example, consider all compounds predicted above 250 GPa as being extraordinary. This is effectivley the same as a classification task, as we are choosing a threshold, and relabeling our data as ordinary/extraordinary. 
@@ -227,7 +240,7 @@ for mat_prop in mat_props:
 
 
     # define logistic regression object
-    lr = LogisticRegression()
+    lr = LogisticRegression(solver='lbfgs')
     # define k-folds
     cv = KFold(n_splits=5, shuffle=True, random_state=1)
 
@@ -248,7 +261,8 @@ for mat_prop in mat_props:
 
     # plot grid search to ensure good values
     utils.plot_2d_grid_search(grid, midpoint=-0.05, vmin=-0.13, vmax=0)
-    plt.savefig('figures/lr_2d_search', dpi=300, bbox_inches='tight')
+    plt.savefig('figures/' + mat_prop +'/lr_2d_search', dpi=300, bbox_inches='tight')
+    plt.show()
     print('best parameters:', grid.best_params_)
     best_params_lr = grid.best_params_
 
@@ -274,8 +288,8 @@ for mat_prop in mat_props:
     # In[9]:
 
 
-    best_params_lr = {'C': 31.622776601683793, 'class_weight': {0: 1, 1: 1.0}}
-    lr = LogisticRegression(penalty='l2', **best_params_lr)
+#    best_params_lr = {'C': 31.622776601683793, 'class_weight': {0: 1, 1: 1.0}}
+    lr = LogisticRegression(solver='lbfgs', penalty='l2', **best_params_lr)
     lr.fit(X_train_scaled, y_train_labeled)
 
     # define k-folds
@@ -296,41 +310,26 @@ for mat_prop in mat_props:
     ax.set_ylabel('actual')
     ax.set_xlabel('predicted')
     ax.xaxis.tick_top()
-    plt.savefig('figures/lr_cm', dpi=300, bbox_inches='tight')
-    plt.plot()
+    plt.savefig('figures/' + mat_prop +'/lr_cm', dpi=300, bbox_inches='tight')
+    plt.show()
 
 
     # In[10]:
 
-
     threshold = 0.5
-    utils.plot_prob(threshold, y_train, y_probability_train_lr, threshold_x=train_threshold)
+    utils.plot_prob(threshold, y_train, y_probability_train_lr, threshold_x=train_threshold, mat_prop=mat_prop)
     plt.title('Logistic Regression: training set')
-    plt.savefig('figures/lr_train_prob_thresh={:0.2f}.png'.format(threshold), dpi=300, bbox_inches='tight')
-
-
-    # Using the default threshold of 0.5, we can see that about half of the extraordinary materials are not classified correctly. If the goal is to find an extraordinary material with the fewest number of trials, than this labeling works well as it maximimzed the precision at the expense of the recall. 
-    # 
-    # However, we are not limited to using 0.5 as our threshold cut-off. We see that we can capture many more extraodrinary materials by considereing compounds with lower probabilities of having high bulk modulus values (eg. exchange precision for recall). We illustrate this bellow by changing the threshold from 0.5 to 0.25. This allows us to identify significantly more extraordinary materials without adding too many false positives.
-
-    # In[11]:
-
-
-    threshold = 0.25
-    utils.plot_prob(threshold, y_train, y_probability_train_lr, threshold_x=train_threshold)
-    plt.title('Logistic Regression: training set')
-    plt.savefig('figures/lr_train_prob_thresh={:0.2f}.png'.format(threshold), dpi=300, bbox_inches='tight')
-
+    plt.savefig('figures/' + mat_prop +'/lr_train_prob_thresh={:0.2f}.png'.format(threshold), dpi=300, bbox_inches='tight')
+    plt.show()
 
     # ### Check our perfromance on the test set!
 
     # In[12]:
 
-
-    threshold = 0.25
-    utils.plot_prob(threshold, y_test, y_probability_test_lr)
+    utils.plot_prob(threshold, y_test, y_probability_test_lr, threshold_x=test_threshold, mat_prop=mat_prop)
     plt.title('Logistic Regression: test set')
-    plt.savefig('figures/lr_test_prob_thresh={:0.2f}.png'.format(threshold), dpi=300, bbox_inches='tight')
+    plt.savefig('figures/' + mat_prop +'/lr_test_prob_thresh={:0.2f}.png'.format(threshold), dpi=300, bbox_inches='tight')
+    plt.show()
 
 
     # ### Compare this performance to regression models
@@ -339,48 +338,42 @@ for mat_prop in mat_props:
 
     # In[13]:
 
-
-    threshold = 170
-    utils.plot_regression(threshold, y_train, y_train_predicted_rr, threshold_x=train_threshold)
-    plt.title('Ridge Regression: training set)')
-    plt.savefig('figures/rr_train_reg_thresh={:0.2f}.png'.format(threshold), dpi=300, bbox_inches='tight')
-
+    threshold = optimize_threshold(y_train_labeled, y_train_predicted_rr)
+    utils.plot_regression(threshold, y_train, y_train_predicted_rr, threshold_x=train_threshold, mat_prop=mat_prop)
+    plt.title('Ridge Regression: training set')
+    plt.savefig('figures/' + mat_prop +'/rr_train_reg_thresh={:0.2f}.png'.format(threshold), dpi=300, bbox_inches='tight')
+    plt.show()
 
     # In[14]:
 
-
-    threshold = 170
-    utils.plot_regression(threshold, y_test, y_test_predicted_rr, threshold_x=test_threshold)
-    plt.title('Ridge Regression: test set)')
-    plt.savefig('figures/rr_test_reg_thresh={:0.2f}.png'.format(threshold), dpi=300, bbox_inches='tight')
+    utils.plot_regression(threshold, y_test, y_test_predicted_rr, threshold_x=test_threshold, mat_prop=mat_prop)
+    plt.title('Ridge Regression: test set')
+    plt.savefig('figures/' + mat_prop +'/rr_test_reg_thresh={:0.2f}.png'.format(threshold), dpi=300, bbox_inches='tight')
+    plt.show()
 
 
     # In[15]:
 
-
-    threshold = 150
-    utils.plot_regression(threshold, y_train, y_train_predicted_svr, threshold_x=train_threshold)
+    threshold = optimize_threshold(y_train_labeled, y_train_predicted_svr)
+    utils.plot_regression(threshold, y_train, y_train_predicted_svr, threshold_x=train_threshold, mat_prop=mat_prop)
     plt.title('SVR: training set')
-    plt.savefig('figures/svr_train_reg_thresh={:0.02f}.png'.format(threshold), dpi=300, bbox_inches='tight')
-
+    plt.savefig('figures/' + mat_prop +'/svr_train_reg_thresh={:0.02f}.png'.format(threshold), dpi=300, bbox_inches='tight')
+    plt.show()
 
     # In[16]:
 
-
-    threshold = 150
-    utils.plot_regression(threshold, y_test, y_test_predicted_svr, threshold_x=test_threshold)
+    utils.plot_regression(threshold, y_test, y_test_predicted_svr, threshold_x=test_threshold, mat_prop=mat_prop)
     plt.title('SVR: test set')
-    plt.savefig('figures/svr_test_reg_thresh={:0.02f}.png'.format(threshold), dpi=300, bbox_inches='tight')
+    plt.savefig('figures/' + mat_prop +'/svr_test_reg_thresh={:0.02f}.png'.format(threshold), dpi=300, bbox_inches='tight')
+    plt.show()
 
 
     # ## Learn with a support vector classification (non-linear)
 
     # In[17]:
 
-
     # to speed up the grid search, optimize on a subsample of data 
     # need a larger sample since the true label is infrequent
-    X_train_scaled_sampled = X_train_scaled.sample(frac=1)
     y_train_labeled_sampled = y_train_labeled.loc[X_train_scaled_sampled.index.values]
 
     # define suppor vector classification object (need to set probability to True)
@@ -404,15 +397,15 @@ for mat_prop in mat_props:
 
     # plot grid search to ensure good values
     utils.plot_2d_grid_search(grid, midpoint=-0.04, vmin=-0.13, vmax=0)
-    plt.savefig('figures/svc_2d_search.png', dpi=300, bbox_inches='tight')
+    plt.savefig('figures/' + mat_prop +'/svc_2d_search.png', dpi=300, bbox_inches='tight')
+    plt.show()
     print('best parameters:', grid.best_params_)
     best_params_svc = grid.best_params_
 
 
     # In[18]:
 
-
-    best_params_svc = {'C': 562.341325190349, 'gamma': 0.1}
+#    best_params_svc = {'C': 562.341325190349, 'gamma': 0.1}
     svc = SVC(probability=True, **best_params_svc)
     svc.fit(X_train_scaled, y_train_labeled)
 
@@ -434,35 +427,27 @@ for mat_prop in mat_props:
     ax.set_ylabel('actual')
     ax.set_xlabel('predicted')
     ax.xaxis.tick_top()
-    plt.savefig('figures/svc_cm', dpi=300, bbox_inches='tight')
-    plt.plot()
+    plt.savefig('figures/' + mat_prop +'/svc_cm', dpi=300, bbox_inches='tight')
+    plt.show()
 
 
     # In[19]:
 
 
     threshold = 0.5
-    utils.plot_prob(threshold, y_train, y_probability_train_svc, threshold_x=train_threshold)
+    utils.plot_prob(threshold, y_train, y_probability_train_svc, threshold_x=train_threshold, mat_prop=mat_prop)
     plt.title('SVC: training set')
-    plt.savefig('figures/svc_train_prob_thresh={:0.02f}.png'.format(threshold), dpi=300, bbox_inches='tight')
-
-
-    # In[20]:
-
-
-    threshold = 0.2
-    utils.plot_prob(threshold, y_train, y_probability_train_svc, threshold_x=train_threshold)
-    plt.title('SVC: training set')
-    plt.savefig('figures/svc_train_prob_thresh={:0.02f}.png'.format(threshold), dpi=300, bbox_inches='tight')
+    plt.savefig('figures/' + mat_prop +'/svc_train_prob_thresh={:0.02f}.png'.format(threshold), dpi=300, bbox_inches='tight')
+    plt.show()
 
 
     # In[21]:
 
 
-    threshold = 0.2
-    utils.plot_prob(threshold, y_test, y_probability_test_svc)
+    utils.plot_prob(threshold, y_test, y_probability_test_svc, threshold_x=test_threshold, mat_prop=mat_prop)
     plt.title('SVC: test set')
-    plt.savefig('figures/svc_test_prob_thresh={:0.2f}.png'.format(threshold), dpi=300, bbox_inches='tight')
+    plt.savefig('figures/' + mat_prop +'/svc_test_prob_thresh={:0.2f}.png'.format(threshold), dpi=300, bbox_inches='tight')
+    plt.show()
 
 
     # # 6. Bonus Material: generating predictions from the PCD
@@ -470,7 +455,6 @@ for mat_prop in mat_props:
     # ### You will need the PCD data (available by email). You will also need to set pcd=True in first cell.
 
     # In[6]:
-
 
     if pcd is True:
         X_all_scaled = pd.concat([X_train_scaled, X_test_scaled], ignore_index=True)
@@ -534,10 +518,5 @@ for mat_prop in mat_props:
         print('# of overlapping compounds:', len(overlap))
 
         print('\ncompounds of interest:', overlap)
-
-
-# In[ ]:
-
-
 
 

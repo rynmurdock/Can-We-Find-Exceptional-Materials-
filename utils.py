@@ -66,7 +66,7 @@ def plot_2d_grid_search(grid, midpoint=0.7, vmin=0, vmax=1):
     plt.title('grid search')
 
 
-def plot_prob(threshold, y_act, y_prob, threshold_x=300):
+def plot_prob(threshold, y_act, y_prob, threshold_x=300, mat_prop='property values'):
 
     color = ['#e41a1c','#377eb8','#4daf4a','#984ea3']
 
@@ -78,28 +78,28 @@ def plot_prob(threshold, y_act, y_prob, threshold_x=300):
     tn, fp, fn, tp = confusion_matrix(y_act_labeled, y_pred_labeled).ravel()
 
     fig, ax = plt.subplots(1, figsize=(6, 6))
-    rect1 = patches.Rectangle((threshold_x,-0.02), 600, threshold + 0.02, linewidth=1, edgecolor='k', facecolor=color[3], alpha=0.4, label='false negative ({:0.0f})'.format(fn))
-    rect2 = patches.Rectangle((-50, threshold), threshold_x+50, 600, linewidth=1, edgecolor='k', facecolor=color[1], alpha=0.4, label='false postive ({:0.0f})'.format(fp))
-    rect3 = patches.Rectangle((threshold_x, threshold), 600, 600, linewidth=1, edgecolor='k', facecolor=color[2], alpha=0.4, label='true positive ({:0.0f})'.format(tp))
-    rect4 = patches.Rectangle((-50, -50), threshold_x+50, threshold+50, linewidth=1, edgecolor='k', facecolor='w', alpha=0.4, label='true negative ({:0.0f})'.format(tn))
+    rect1 = patches.Rectangle((threshold_x,-0.02), 6000, threshold + 0.02, linewidth=1, edgecolor='k', facecolor=color[3], alpha=0.25, label='false negative ({:0.0f})'.format(fn))
+    rect2 = patches.Rectangle((-50, threshold), threshold_x+50, 6000, linewidth=1, edgecolor='k', facecolor=color[1], alpha=0.25, label='false postive ({:0.0f})'.format(fp))
+    rect3 = patches.Rectangle((threshold_x, threshold), 6000, 6000, linewidth=1, edgecolor='k', facecolor=color[2], alpha=0.25, label='true positive ({:0.0f})'.format(tp))
+    rect4 = patches.Rectangle((-50, -50), threshold_x+50, threshold+50, linewidth=1, edgecolor='k', facecolor='w', alpha=0.25, label='true negative ({:0.0f})'.format(tn))
     ax.add_patch(rect1)
     ax.add_patch(rect2)
     ax.add_patch(rect3)
     ax.add_patch(rect4)
 
     plt.tick_params(direction='in', length=5, bottom=True, top=True, left=True, right=True)
-    plt.plot(y_act, y_prob, 'o', mfc='none', alpha=0.6, mec='#3F6077', mew=1.4)
+    plt.plot(y_act, y_prob, 'o', mfc='#C0C0C0', alpha=0.5, mec='#2F4F4F', mew=1.3)
     plt.plot([-10, 600], [threshold, threshold], 'k--', label='threshold', linewidth=3)
 
     plt.ylabel('Probability of being extraordinary')
-    plt.xlabel('Thermal Conductivity at 300K')
-    plt.xlim(-10, max(y_act)+50)
+    plt.xlabel(mat_prop.title())
+    plt.xlim(min(y_act)*1.05, max(y_act)*1.05)
     plt.ylim(-.02, 1)
 
-    plt.legend(loc=2, framealpha=0.4)
+    plt.legend(loc=2, framealpha=0.25)
     return fig
 
-def plot_regression(threshold, y_act, y_pred, threshold_x=300):
+def plot_regression(threshold, y_act, y_pred, threshold_x=300, mat_prop='property values'):
 
     color = ['#e41a1c','#377eb8','#4daf4a','#984ea3']
 
@@ -111,26 +111,26 @@ def plot_regression(threshold, y_act, y_pred, threshold_x=300):
     tn, fp, fn, tp = confusion_matrix(y_act_labeled, y_pred_labeled).ravel()
 
     fig, ax = plt.subplots(1, figsize=(6, 6))
-    rect1 = patches.Rectangle((threshold_x, -100), 600, threshold + 100, linewidth=1, edgecolor='k', facecolor=color[3], alpha=0.4, label='false negative ({:0.0f})'.format(fn))
-    rect2 = patches.Rectangle((-50, threshold), threshold_x+50, 600, linewidth=1, edgecolor='k', facecolor=color[1], alpha=0.4, label='false postive ({:0.0f})'.format(fp))
-    rect3 = patches.Rectangle((threshold_x, threshold), 600, 600, linewidth=1, edgecolor='k', facecolor=color[2], alpha=0.4, label='true positive ({:0.0f})'.format(tp))
-    rect4 = patches.Rectangle((-50, -50), threshold_x+50, threshold+50, linewidth=1, edgecolor='k', facecolor='w', alpha=0.4, label='true negative ({:0.0f})'.format(tn))
+    rect1 = patches.Rectangle((threshold_x, -100), 600, threshold + 100, linewidth=1, edgecolor='k', facecolor=color[3], alpha=0.25, label='false negative ({:0.0f})'.format(fn))
+    rect2 = patches.Rectangle((-50, threshold), threshold_x+50, 600, linewidth=1, edgecolor='k', facecolor=color[1], alpha=0.25, label='false postive ({:0.0f})'.format(fp))
+    rect3 = patches.Rectangle((threshold_x, threshold), 600, 600, linewidth=1, edgecolor='k', facecolor=color[2], alpha=0.25, label='true positive ({:0.0f})'.format(tp))
+    rect4 = patches.Rectangle((-50, -50), threshold_x+50, threshold+50, linewidth=1, edgecolor='k', facecolor='w', alpha=0.25, label='true negative ({:0.0f})'.format(tn))
     ax.add_patch(rect1)
     ax.add_patch(rect2)
     ax.add_patch(rect3)
     ax.add_patch(rect4)
     
     plt.tick_params(direction='in', length=5, bottom=True, top=True, left=True, right=True)
-    plt.plot(y_act, y_pred, 'o', mfc='none', alpha=0.6, mec='#3F6077', mew=1.4)
+    plt.plot(y_act, y_pred, 'o', mfc='#C0C0C0', alpha=0.5, mec='#2F4F4F', mew=1.3)
     plt.plot([-10, 600], [threshold, threshold], 'k--', label='threshold', linewidth=3)
 
     plt.ylabel('Predicted Thermal Conductivity at 300K')
-    plt.xlabel('Thermal Conductivity at 300K')
-    plt.xlim(-10, max(y_act)+50)
-    plt.ylim(-10, max(y_act)+50)
+    plt.xlabel(mat_prop.title())
+    plt.xlim(min(y_act)*1.05, max(y_act)*1.05)
+    plt.ylim(min(y_act)*1.05, max(y_act)*1.05)
 
 #    plt.legend(loc=2)
-    plt.legend(loc=2, framealpha=0.4)
+    plt.legend(loc=2, framealpha=0.25)
     return fig
     
 
