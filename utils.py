@@ -119,15 +119,18 @@ def plot_regression(threshold, y_act, y_pred, threshold_x=300, mat_prop='propert
     ax.add_patch(rect2)
     ax.add_patch(rect3)
     ax.add_patch(rect4)
-    
+
     plt.tick_params(direction='in', length=5, bottom=True, top=True, left=True, right=True)
     plt.plot(y_act, y_pred, 'o', mfc='#C0C0C0', alpha=0.5, mec='#2F4F4F', mew=1.3)
     plt.plot([-10, 600], [threshold, threshold], 'k--', label='threshold', linewidth=3)
 
     plt.ylabel('Predicted Thermal Conductivity at 300K')
     plt.xlabel(mat_prop.title())
-    plt.xlim(min(y_act)*1.05, max(y_act)*1.05)
-    plt.ylim(min(y_act)*1.05, max(y_act)*1.05)
+    plt.xlim(min(y_act)/1.05, max(y_act)*1.05)
+    plt.ylim(min(y_act)/1.05, max(y_act)*1.05)
+    if max(y_act) < 0 and min(y_act) < 0:
+        plt.xlim(min(y_act)*1.05, max(y_act)/1.05)
+        plt.ylim(min(y_act)*1.05, max(y_act)/1.05)
 
 #    plt.legend(loc=2)
     plt.legend(loc=2, framealpha=0.25)

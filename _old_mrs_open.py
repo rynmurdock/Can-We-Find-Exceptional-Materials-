@@ -49,7 +49,7 @@ def optimize_threshold(y_train_labeled, y_train_pred):
     y_train_pred_ = pd.Series(y_train_pred).copy()
     f1score_max = 0
     for threshold in np.arange(0.1, 1, 0.1):
-        threshold = threshold * max(y_train_pred)
+        threshold = min(y_train_pred) + threshold * (max(y_train_pred) - min(y_train_pred))
         y_train_pred_[y_train_pred < threshold] = 0
         y_train_pred_[y_train_pred >= threshold] = 1
         f1score = f1_score(y_train_, y_train_pred_)
@@ -64,7 +64,9 @@ pcd = False
 
 # In[2]:
 
-mat_props = ['ael_bulk_modulus_vrh', 'ael_shear_modulus_vrh']  # 'ael_bulk_modulus_vrh', 'agl_log10_thermal_conductivity_300K', 'ael_shear_modulus_vrh', 'Egap', 'ael_log10_debye_temperature', 'agl_log10_thermal_expansion_300K'
+#mat_props = ['agl_log10_thermal_expansion_300K']  # 'ael_bulk_modulus_vrh', 'agl_log10_thermal_conductivity_300K', 'ael_shear_modulus_vrh', 'Egap', 'ael_log10_debye_temperature', 'agl_log10_thermal_expansion_300K'
+
+mat_props = ['ael_bulk_modulus_vrh', 'agl_log10_thermal_conductivity_300K', 'ael_shear_modulus_vrh', 'Egap', 'ael_log10_debye_temperature', 'agl_log10_thermal_expansion_300K']
 
 for mat_prop in mat_props:
     os.makedirs('figures/'+mat_prop, exist_ok=True)
