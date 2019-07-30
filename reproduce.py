@@ -408,7 +408,7 @@ for mat_prop in mat_props:
 
     # # 6. Bonus Material: generating predictions from the PCD
     # 
-    # ### You will need the PCD data (available by email). You will also need to set pcd=True in this file cell.
+    # ### You will need the PCD data (available by email). You will also need to set pcd=True in this file.
 
 
     if pcd is True:
