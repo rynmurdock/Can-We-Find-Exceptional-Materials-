@@ -1,5 +1,8 @@
 # MRS Open Data Challenge
 
+# Usage
+
+To replicate the findings of this work, run either `replicate.py --all` or run `replicate.py --properties ` followed by any combination of the following material properties: 'bulk modulus','thermal conductivity','shear modulus','band gap','debye temperature', or 'thermal expansion.' For example, to run just shear and bulk modulus, run `replicate.py --properties "bulk modulus" "shear modulus"`
 
 # Beyond the Training Set: An Exercise in Extrapolation
 
@@ -7,7 +10,7 @@
 # 1. Abstract
 
 
-<img align="right"  src="figures/distplot.png" width="400">
+<img align="right"  src="figures/ael_bulk_modulus_vrh/distplot.png" width="400">
 
 One of the most common criticisms of machine learning in materials science is an assumed inability for models to extrapolate beyond the training data set. This work uses a dataset containing close to 12,000 DFT computed bulk modulus values, taken from the materials project and AFLOW databases, to evaluate whether machine learning is truly capable of predicting materials with properties that extend beyond previously seen values. To do this, we first held out the top 100 compounds from the data.  After which, we performed a train test split and assigned the top 100 compounds (referred to as "extraordinary") to the test set. This procedure allowed us to generate useful metrics in regards to extrapolative model potential. In this work, we found that a straight forward regression can identify a limited number of extraordinary materials. However, we show that this approach is inferior to a simple logistic regression (classification tool) that was trained to identify the top 100 compounds of the training set as "extraordinary" and the rest as ordinary. This classification approach leads to better precision and recall values when compared to regression models. Overall, this work results in two key findings. First, model extrapolation is a reality for the bulk modulus system we explored. Second, a machine learning classifier is likely to be more effective than regression tools for the exploration of extraordinary materials. 
 
