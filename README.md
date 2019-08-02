@@ -1,10 +1,9 @@
-# MRS Open Data Challenge
+# Can we find exceptional materials?
 
 # Usage
 
 To replicate the findings of this work, run either `replicate.py --all` or run `replicate.py --properties ` followed by any combination of the following material properties in quotation marks: "bulk modulus","thermal conductivity","shear modulus","band gap","debye temperature", or "thermal expansion". For example, to run just shear and bulk modulus, use `replicate.py --properties "bulk modulus" "shear modulus"`
 
-# Beyond the Training Set: An Exercise in Extrapolation
 
 
 # 1. Abstract
