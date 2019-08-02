@@ -58,7 +58,7 @@ for mat_prop in mat_props:
     # remove these compounds from the train data
     df_train = df_train[~df_train.index.isin(df_test_false.index.values)]
 
-    # set 100 "extraordinary" compounds for the test data
+    # set the top 1% "extraordinary" compounds for the test data
     df_test_true = df_featurized.iloc[-n_extraordinary:, :]
 
     # compile the test data "ordinary" + "extraordinary"
