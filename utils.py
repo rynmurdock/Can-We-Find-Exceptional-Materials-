@@ -91,7 +91,7 @@ def plot_prob(threshold, y_act, y_prob, threshold_x=300, mat_prop='property valu
     plt.plot(y_act, y_prob, 'o', mfc='#C0C0C0', alpha=0.5, mec='#2F4F4F', mew=1.3)
     plt.plot([-10, 600], [threshold, threshold], 'k--', label='threshold', linewidth=3)
 
-    plt.ylabel('Probability of being extraordinary')
+    plt.ylabel('Probability of being extraordinary'.title())
     plt.xlabel(mat_prop.title())
     plt.xlim(min(y_act)*1.05, max(y_act)*1.05)
     plt.ylim(-.02, 1)
@@ -124,7 +124,7 @@ def plot_regression(threshold, y_act, y_pred, threshold_x=300, mat_prop='propert
     plt.plot(y_act, y_pred, 'o', mfc='#C0C0C0', alpha=0.5, mec='#2F4F4F', mew=1.3)
     plt.plot([-10, 600], [threshold, threshold], 'k--', label='threshold', linewidth=3)
 
-    plt.ylabel('Predicted Thermal Conductivity at 300K')
+    plt.ylabel('Predicted'+mat_prop.title())
     plt.xlabel(mat_prop.title())
     plt.xlim(min(y_act)/1.05, max(y_act)*1.05)
     plt.ylim(min(y_act)/1.05, max(y_act)*1.05)

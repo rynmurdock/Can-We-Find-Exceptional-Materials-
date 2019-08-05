@@ -10,6 +10,7 @@ import re
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot
+import tqdm
 
 def get_sym_dict(f, factor):
     sym_dict = collections.defaultdict(float)
@@ -80,25 +81,22 @@ def _element_composition(formula):
 def _assign_features(formula, elem_props):
     try:
         fractional_composition = _fractional_composition(formula)
-        element_composition = _element_composition(formula)
         avg_feature = np.zeros(len(elem_props.iloc[0]))
-        sum_feature = np.zeros(len(elem_props.iloc[0]))
         for key in fractional_composition:
             try:
                 avg_feature += elem_props.loc[key].values * fractional_composition[key]
-                sum_feature += elem_props.loc[key].values * element_composition[key]
             except:
-                print('The element:', key, 'from formula', formula,'is not currently supported in our database')
-                return np.array([np.nan]*len(elem_props.iloc[0])*4)
+#                print('The element:', key, 'from formula', formula,'is not currently supported in our database')
+                return np.array([np.nan]*len(elem_props.iloc[0])*3)
         var_feature = elem_props.loc[list(fractional_composition.keys())].var()
         range_feature = elem_props.loc[list(fractional_composition.keys())].max()-elem_props.loc[list(fractional_composition.keys())].min()
 
-        features = pd.DataFrame(np.concatenate([avg_feature, sum_feature, np.array(var_feature), np.array(range_feature)]))
-        features = np.concatenate([avg_feature, sum_feature, np.array(var_feature), np.array(range_feature)])
+        features = pd.DataFrame(np.concatenate([avg_feature, np.array(var_feature), np.array(range_feature)]))
+        features = np.concatenate([avg_feature, np.array(var_feature), np.array(range_feature)])
         return features.transpose()
     except:
-        print('There was an error with the formula: "'+ formula + '", please check the formatting')
-        return np.array([np.nan]*len(elem_props.iloc[0])*4)
+#        print('There was an error with the formula: "'+ formula + '", please check the formatting')
+        return np.array([np.nan]*len(elem_props.iloc[0])*3)
 
 def generate_features(df, reset_index=True):
     '''
@@ -119,9 +117,8 @@ def generate_features(df, reset_index=True):
     elem_props = pd.read_excel('data/element_properties.xlsx')
     elem_props.index = elem_props['element'].values
     elem_props.drop(['element'], inplace=True, axis=1)
-    # print(elem_props.head())
-    # elem_props = pd.read_json('element_chem.json').T
-    column_names = np.concatenate(['sum_'+elem_props.columns.values,  'avg_'+elem_props.columns.values, 'var_'+elem_props.columns.values, 'range_'+elem_props.columns.values])
+
+    column_names = np.concatenate(['avg_'+elem_props.columns.values, 'var_'+elem_props.columns.values, 'range_'+elem_props.columns.values])
 
     # make empty list where we will store the feature vectors
     features = []
@@ -130,7 +127,8 @@ def generate_features(df, reset_index=True):
     # stro formula
     formulae = []
     # add the values to the list using a for loop
-    for formula, target in zip(df['formula'], df['target']):
+    for index in tqdm.tqdm(df.index.values):
+        formula, target = df.loc[index, 'formula'], df.loc[index, 'target']
         features.append(_assign_features(formula, elem_props))
         targets.append(target)
         formulae.append(formula)
